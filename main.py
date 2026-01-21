@@ -29,8 +29,9 @@ def scrape_site():
 
     web.get("https://www.glassdoor.com.br")
     wait = WebDriverWait(web, 10)
-    job_info = {}
+
     all_jobs = []
+    list_functions = ['Python', 'Java', 'Suporte Técnico', 'Redes', 'Infraestrutura', 'DevOps', 'SRE', 'Desenvolvedor']
     try:
 
         if not web.find_element(By.CLASS_NAME, "ji8JI0ibjBNKYy6dBuvi"):
@@ -81,12 +82,14 @@ def scrape_site():
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
         else:
             count = 1000
-            for i in range(1, 5):
+            for i in range(1, 10):
                 jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
                 for job in jobs:
-                    job_info.update({"vaga": job.find_elements(By.TAG_NAME, "a")[0].text,
-                                     "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")})
-                    all_jobs.append(job_info)
+                    job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
+                    if any(keyword.lower() in job_title.lower() for keyword in list_functions):
+                        job_info = {"vaga": job_title,
+                                    "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
+                        all_jobs.append(job_info)
 
                 web.execute_script(f"window.scrollTo(0,{count});")
                 time.sleep(2)
@@ -97,9 +100,12 @@ def scrape_site():
         print(e.msg)
     finally:
         print("--------------------------------\n\n")
-        all_jobs = all_jobs
-        print ("\n".join(all_jobs))
-        web.close()
+
+    jobs_tuple = {tuple(sorted(d.items(), reverse=True)) for d in all_jobs}
+    for job in jobs_tuple:
+        print(job)
+
+    web.close()
 
 
 # Press the green button in the gutter to run the script.
