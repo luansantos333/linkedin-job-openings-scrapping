@@ -3,13 +3,12 @@ import time
 
 from selenium import webdriver
 from selenium.common import TimeoutException
-from selenium.webdriver import Keys
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def scrape_site():
@@ -65,6 +64,19 @@ def scrape_site():
                     form.find_element(By.TAG_NAME, 'button').click()
                     web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
+                    count = 1000
+                    for i in range(1, 10):
+                        jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
+                        for job in jobs:
+                            job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
+                            if any(keyword.lower() in job_title.lower() for keyword in list_functions):
+                                job_info = {"vaga": job_title,
+                                            "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
+                                all_jobs.append(job_info)
+
+                    web.execute_script(f"window.scrollTo(0,{count});")
+                    time.sleep(2)
+                    count = count * i
                 else:
                     actions = ActionChains(web)
                     confirm = wait.until(EC.element_to_be_clickable(
@@ -80,6 +92,19 @@ def scrape_site():
                     form.find_element(By.TAG_NAME, 'button').click()
                     web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
+                    count = 1000
+                    for i in range(1, 10):
+                        jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
+                        for job in jobs:
+                            job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
+                            if any(keyword.lower() in job_title.lower() for keyword in list_functions):
+                                job_info = {"vaga": job_title,
+                                            "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
+                                all_jobs.append(job_info)
+
+                    web.execute_script(f"window.scrollTo(0,{count});")
+                    time.sleep(2)
+                    count = count * i
         else:
             count = 1000
             for i in range(1, 10):
@@ -108,8 +133,5 @@ def scrape_site():
     web.close()
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     scrape_site()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
