@@ -1,6 +1,5 @@
 import os
 import time
-
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -30,15 +29,21 @@ def scrape_site():
     wait = WebDriverWait(web, 10)
 
     all_jobs = []
-    list_functions = ['Python', 'Java', 'Suporte Técnico', 'Redes', 'Infraestrutura', 'DevOps', 'SRE', 'Desenvolvedor']
+    list_functions = ['Python', 'Java', 'Suporte Técnico', 'Redes', 'Infraestrutura', 'DevOps', 'SRE', 'Desenvolvedor',
+                      'Desenvolvedora']
     try:
+        ## VALIDATES WEATHER THE USER IS LOGGED IN
+        time.sleep(1)
+        home_page_google_login_btn = web.find_elements(By.XPATH,
+                                                       '//*[@id="InlineLoginModule"]/div/div[1]/div/div/div/div/div[1]/div/div[1]/div/button')
 
-        if not web.find_element(By.CLASS_NAME, "ji8JI0ibjBNKYy6dBuvi"):
-
+        if not len(home_page_google_login_btn) == 0:
             google_login = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "colorCtaGoogle")))
             google_login.click()
             web.switch_to.window(web.window_handles[1])
-            if not web.find_element(By.CLASS_NAME, "pGzURd"):
+            ## VERIFY IF THERE IS NOT A GOOGLE ACCOUNT ALREADY LOGGED
+            if not web.find_element(By.XPATH,
+                                    '//*[@id="yDmH0d"]/c-wiz/main/div[2]/div/div/div[1]/span/section/div/div/div/div/ul/li[1]/div/div[1]/div/div[2]/div[2]'):
                 web.find_element(By.XPATH, '//*[@id="identifierId"]').send_keys(os.getenv("GOOGLE_EMAIL"))
                 web.find_element(By.XPATH, '//*[@id="identifierNext"]/div/button/span').click()
                 password = wait.until(
@@ -51,18 +56,23 @@ def scrape_site():
             else:
                 web.find_element(By.CLASS_NAME, "yAlK0b").click()
                 wait._timeout = 5
+                ## IF NO CONFIRMATION DIALOG SHOWS UP
                 if not wait.until(EC.presence_of_element_located(
                         (By.XPATH, '//*[@id="yDmH0d"]/c-wiz/main/div[3]/div/div/div[2]/div/div/button'))):
                     web.switch_to.window(web.window_handles[0])
                     wait._timeout = 10
+                    ## LOGIN BUTTON GLASSDOOR
                     login_btn = wait.until(EC.element_to_be_clickable(
                         (By.XPATH, '//*[@id="AuthPromptModalContainer"]/div/div/dialog/div[2]/div[2]/div/div/button')))
                     login_btn.click()
-                    web.switch_to.window(web.window_handles[1])
-                    web.find_element(By.ID, 'onetrust-accept-btn-handler').click()
-                    form = web.find_element(By.ID, 'emailform')
-                    form.find_element(By.TAG_NAME, 'button').click()
-                    web.find_element(By.ID, 'googleContainer').click()
+                    # IF GLASSDOOR ASK FOR CONFIRMATION
+                    time.sleep(1)
+                    if not len(web.window_handles) == 1:
+                        web.switch_to.window(web.window_handles[1])
+                        web.find_element(By.ID, 'onetrust-accept-btn-handler').click()
+                        form = web.find_element(By.ID, 'emailform')
+                        form.find_element(By.TAG_NAME, 'button').click()
+                        web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
                     count = 1000
                     for i in range(1, 10):
@@ -74,9 +84,9 @@ def scrape_site():
                                             "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
                                 all_jobs.append(job_info)
 
-                    web.execute_script(f"window.scrollTo(0,{count});")
-                    time.sleep(2)
-                    count = count * i
+                        web.execute_script(f"window.scrollTo(0,{count});")
+                        time.sleep(2)
+                        count = count * i
                 else:
                     actions = ActionChains(web)
                     confirm = wait.until(EC.element_to_be_clickable(
@@ -86,11 +96,14 @@ def scrape_site():
                     login_btn = wait.until(EC.element_to_be_clickable(
                         (By.XPATH, '//*[@id="AuthPromptModalContainer"]/div/div/dialog/div[2]/div[2]/div/div/button')))
                     login_btn.click()
-                    web.switch_to.window(web.window_handles[1])
-                    web.find_element(By.ID, 'onetrust-accept-btn-handler').click()
-                    form = web.find_element(By.ID, 'emailform')
-                    form.find_element(By.TAG_NAME, 'button').click()
-                    web.find_element(By.ID, 'googleContainer').click()
+                    # IF GLASSDOOR ASK FOR CONFIRMATION
+                    time.sleep(1)
+                    if not len(web.window_handles) == 1:
+                        web.switch_to.window(web.window_handles[1])
+                        web.find_element(By.ID, 'onetrust-accept-btn-handler').click()
+                        form = web.find_element(By.ID, 'emailform')
+                        form.find_element(By.TAG_NAME, 'button').click()
+                        web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
                     count = 1000
                     for i in range(1, 10):
@@ -102,10 +115,11 @@ def scrape_site():
                                             "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
                                 all_jobs.append(job_info)
 
-                    web.execute_script(f"window.scrollTo(0,{count});")
-                    time.sleep(2)
-                    count = count * i
+                        web.execute_script(f"window.scrollTo(0,{count});")
+                        time.sleep(2)
+                        count = count * i
         else:
+            ## EXECUTE IF USER IS LOGGED IN
             count = 1000
             for i in range(1, 10):
                 jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
