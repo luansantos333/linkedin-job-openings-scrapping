@@ -1,7 +1,6 @@
 import os
 import time
 
-from numpy.f2py.cfuncs import needs
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -10,6 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+import pandas as pd
 
 
 def scrape_site():
@@ -117,7 +117,8 @@ def scrape_site():
                             job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
                             if any(keyword.lower() in job_title.lower() for keyword in list_functions):
                                 job_info = {"vaga": job_title,
-                                            "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
+                                            "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href"),
+                                            "localidade": job.find_elements(By.TAG_NAME, 'div')[2].text}
                                 all_jobs.append(job_info)
 
                         web.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -133,9 +134,11 @@ def scrape_site():
                 jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
                 for job in jobs:
                     job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
+
                     if any(keyword.lower() in job_title.lower() for keyword in list_functions):
                         job_info = {"vaga": job_title,
-                                    "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
+                                    "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href"),
+                                    "localidade": job.find_element(By.CLASS_NAME, 'JobCard_location__Ds1fM').text}
                         all_jobs.append(job_info)
 
                 web.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -152,8 +155,9 @@ def scrape_site():
         print("--------------------------------\n\n")
 
     jobs_tuple = {tuple(sorted(d.items(), reverse=True)) for d in all_jobs}
-    for job in jobs_tuple:
-        print(job)
+    jobs_dict = [dict(tuple) for tuple in jobs_tuple]
+    pd.DataFrame(jobs_dict).to_csv('jobs.csv', index=False, columns=['vaga', 'link', 'localidade'], sep=';')
+
 
     web.close()
 
