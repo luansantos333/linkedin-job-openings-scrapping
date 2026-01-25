@@ -1,5 +1,7 @@
 import os
 import time
+
+from numpy.f2py.cfuncs import needs
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -32,7 +34,7 @@ def scrape_site():
     list_functions = ['Python', 'Java', 'Suporte Técnico', 'Redes', 'Infraestrutura', 'DevOps', 'SRE', 'Desenvolvedor',
                       'Desenvolvedora']
     try:
-        ## VALIDATES WEATHER THE USER IS LOGGED IN
+        ## VALIDATES IF THE USER IS LOGGED IN
         time.sleep(1)
         home_page_google_login_btn = web.find_elements(By.XPATH,
                                                        '//*[@id="InlineLoginModule"]/div/div[1]/div/div/div/div/div[1]/div/div[1]/div/button')
@@ -74,8 +76,8 @@ def scrape_site():
                         form.find_element(By.TAG_NAME, 'button').click()
                         web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
-                    count = 1000
-                    for i in range(1, 10):
+                    last_height = web.execute_script("return document.body.scrollHeight")
+                    while True:
                         jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
                         for job in jobs:
                             job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
@@ -84,9 +86,12 @@ def scrape_site():
                                             "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
                                 all_jobs.append(job_info)
 
-                        web.execute_script(f"window.scrollTo(0,{count});")
+                        web.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                         time.sleep(2)
-                        count = count * i
+                        new_height = web.execute_script("return document.body.scrollHeight")
+                        if new_height == last_height:
+                            break
+                        last_height = new_height
                 else:
                     actions = ActionChains(web)
                     confirm = wait.until(EC.element_to_be_clickable(
@@ -105,8 +110,8 @@ def scrape_site():
                         form.find_element(By.TAG_NAME, 'button').click()
                         web.find_element(By.ID, 'googleContainer').click()
                     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'ji8JI0ibjBNKYy6dBuvi')))
-                    count = 1000
-                    for i in range(1, 10):
+                    last_height = web.execute_script("return document.body.scrollHeight")
+                    while True:
                         jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
                         for job in jobs:
                             job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
@@ -115,13 +120,16 @@ def scrape_site():
                                             "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
                                 all_jobs.append(job_info)
 
-                        web.execute_script(f"window.scrollTo(0,{count});")
+                        web.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                         time.sleep(2)
-                        count = count * i
+                        new_height = web.execute_script("return document.body.scrollHeight")
+                        if new_height == last_height:
+                            break
+                        last_height = new_height
         else:
             ## EXECUTE IF USER IS LOGGED IN
-            count = 1000
-            for i in range(1, 10):
+            last_height = web.execute_script("return document.body.scrollHeight")
+            while True:
                 jobs = web.find_elements(By.CLASS_NAME, "JobCard_jobCardLeftContent__cHcGe")
                 for job in jobs:
                     job_title = job.find_elements(By.TAG_NAME, 'a')[0].text
@@ -130,9 +138,12 @@ def scrape_site():
                                     "link": job.find_elements(By.TAG_NAME, "a")[1].get_attribute("href")}
                         all_jobs.append(job_info)
 
-                web.execute_script(f"window.scrollTo(0,{count});")
+                web.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 time.sleep(2)
-                count = count * i
+                new_height = web.execute_script("return document.body.scrollHeight")
+                if new_height == last_height:
+                    break
+                last_height = new_height
 
 
     except TimeoutException as e:
